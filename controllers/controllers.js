@@ -1,8 +1,8 @@
-const { selectAllTopics, fetchArticleById } = require('../models/models')
+const { selectAllTopics, fetchArticleById, fetchArticles } = require('../models/models')
 const endpoints = require('../endpoints.json')
 
 exports.getTopics = (req, res, next) => {
-    selectAllTopics()
+    return selectAllTopics()
     .then((topics) => {
         res.status(200).send({ topics });
     })
@@ -18,11 +18,22 @@ exports.getArticleById = (req, res, next) => {
 
     if (isNaN(Number(article_id))) {
         return Promise.reject({ status: 400, msg: 'Invalid Id' })
-        .catch(next);
+        .catch((err) => {
+            next(err);
+        });
     }
 
-    fetchArticleById(article_id).then((article) => {
+    return fetchArticleById(article_id).then((article) => {
         res.status(200).send({article: article})
+    }).catch((err) => {
+        next(err);
+    })
+}
+
+exports.getArticles = (req, res, next) => {
+    return fetchArticles()
+    .then((articles) => {
+        res.status(200).send({ articles })
     }).catch((err) => {
         next(err);
     })
