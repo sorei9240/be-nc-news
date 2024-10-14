@@ -1,6 +1,14 @@
 # Northcoders News API
 
-For instructions, please head over to [L2C NC News](https://l2c.northcoders.com/courses/be/nc-news).
+## Setup Instructions
+
+To setup this project locally:
+1. **Clone the repository**: git clone <https://github.com/sorei9240/nc-news.git> 
+2. **Install the dependencies**: by running `npm install` in the terminal
+3. **Setup your dotenv files** by adding these two files to the root directory: 
+    - **.env.test** which should contain the line `PGDATABASE=nc_news_test`
+    - **.env.development** which should contain `PGDATABASE=nc_news`
+4. **Setup and seed the database**: run `npm run setup-dbs` and `npm run seed` in the terminal
 
 
 
