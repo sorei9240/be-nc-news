@@ -34,3 +34,39 @@ describe('GET /api', () => {
             })
     })
 })
+
+describe('GET /api/articles/:article_id', () => {
+    it('responds with the appropriate article object', () => {
+        return request(app)
+            .get('/api/articles/1')
+            .expect(200)
+            .then(({ body }) => {
+                expect(body.article).toEqual({
+                    article_id: 1,
+                    title: 'Living in the shadow of a great man',
+                    topic: 'mitch',
+                    author: 'butter_bridge',
+                    body: 'I find this existence challenging',
+                    created_at: '2020-07-09T20:11:00.000Z',
+                    votes: 100,
+                    article_img_url: 'https://images.pexels.com/photos/158651/news-newsletter-newspaper-information-158651.jpeg?w=700&h=700'
+                })
+            })
+    })
+    it('responds with a 404 error when a valid, but non-existent id is requested', () => {
+        return request(app)
+            .get('/api/articles/9999')
+            .expect(404)
+            .then(({ body }) => {
+                expect(body.msg).toBe('Not found')
+            })
+    })
+    it('responds with a 400 error when an invalid id is requested', () => {
+        return request(app)
+            .get('/api/articles/not-an-id')
+            .expect(400)
+            .then(({ body }) => {
+                expect(body.msg).toBe('Invalid Id')
+            })
+    })
+})
