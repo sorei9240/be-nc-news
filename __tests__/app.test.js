@@ -110,7 +110,7 @@ describe('GET /api/articles/:article_id/comments', () => {
                         created_at: expect.any(String),
                         author: expect.any(String),
                         body: expect.any(String),
-                        article_id: expect.any(Number)
+                        article_id: 9,
                     }))
                 })
             })
@@ -122,5 +122,97 @@ describe('GET /api/articles/:article_id/comments', () => {
             .then(({ body }) => {
                 expect(body.comments).toHaveLength(0);
             })
+    })
+    it('GET:404 returns an error when a valid, but nonexistent id is passed', () => {
+        return request(app)
+        .get('/api/articles/9999/comments')
+        .expect(404)
+        .then(({ body }) => {
+            expect(body.msg).toBe('Not found')
+        })
+    })
+    it('GET:400 responds with an error when an invalid id is requested', () => {
+        return request(app)
+            .get('/api/articles/abc/comments')
+            .expect(400)
+            .then(({ body }) => {
+                expect(body.msg).toBe('Invalid Id')
+            })
+    })
+})
+
+describe('POST /api/articles/:article_id/comments', () => {
+    it('POST:201 returns the posted comment', () => {
+        const testComment = { username: 'butter_bridge', body: 'I agree.'};
+
+        return request(app)
+        .post('/api/articles/10/comments')
+        .send(testComment)
+        .expect(201)
+        .then(({ body }) => {
+            expect(body.comment).toEqual(expect.objectContaining({
+                comment_id: expect.any(Number),
+                body: testComment.body,
+                votes: 0,
+                author: testComment.username,
+                article_id: 10,
+                created_at: expect.any(String)
+            }))
+        })
+    })
+
+    it('POST:400 returns an error when an attempt is made to post to an invalid id', () => {
+        const testComment = { username: 'butter_bridge', body: 'I agree.'};
+
+        return request(app)
+        .post('/api/articles/abc/comments')
+        .send(testComment)
+        .expect(400)
+        .then(({ body }) => {
+            expect(body.msg).toBe('Invalid Id')
+        })
+    })
+    it('POST:400 returns an error when the request is missing the body', () => {
+        const testComment = { username: "butter_bridge"}
+        return request(app)
+        .post('/api/articles/1/comments')
+        .send(testComment)
+        .expect(400)
+        .then(({ body }) => {
+            expect(body.msg).toBe('Missing username or body')
+        })
+    })
+    it('POST:400 returns an error when the request is missing a username', () => {
+        const testComment = { body: 'I agree'}
+        return request(app)
+        .post('/api/articles/1/comments')
+        .send(testComment)
+        .expect(400)
+        .then(({ body }) => {
+            expect(body.msg).toBe('Missing username or body')
+        })
+    })
+    it('POST:404 returns an error when an attempt is made to post to a valid but nonexistent id', () => {
+        const testComment = { username: 'butter_bridge', body: 'I agree.'};
+
+        return request(app)
+        .post('/api/articles/9999/comments')
+        .send(testComment)
+        .expect(404)
+        .then(({ body }) => {
+            expect(body.msg).toBe('Not found')
+        })
+    })
+
+    it('Returns an error when an invalid username is entered', () => {
+        const testComment = { username: 'i_dont_exist', body: 'I agree.'};
+
+        return request(app)
+        .post('/api/articles/10/comments')
+        .send(testComment)
+        .expect(404)
+        .then(({ body }) => {
+            expect(body.msg).toBe('Invalid username')
+        })
     })
 })
