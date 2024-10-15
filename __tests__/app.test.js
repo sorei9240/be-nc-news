@@ -216,3 +216,57 @@ describe('POST /api/articles/:article_id/comments', () => {
         })
     })
 })
+
+describe('PATCH /api/articles/:article_id', () => {
+    it('PATCH:200 updates the article votes by the specified amount', () => {
+        const updateVotes = { inc_votes: 1};
+        return request(app)
+            .patch('/api/articles/1')
+            .send(updateVotes)
+            .expect(200)
+            .then(({ body }) => {
+                expect(body.article.article_id).toBe(1)
+                expect(body.article.votes).toBe(101)
+            })
+    })
+    it('PATCH:400 returns an error when an attempt is made to patch an invalid id', () => {
+        const updateVotes = { inc_votes: 1};
+        return request(app)
+        .patch('/api/articles/abc')
+        .send(updateVotes)
+        .expect(400)
+        .then(({ body }) => {
+            expect(body.msg).toBe('Invalid Id')
+        })
+    })
+    it('PATCH:404 returns an error when an attempt is made to patch a valid but nonexistent id', () => {
+        const updateVotes = { inc_votes: 1};
+        return request(app)
+        .patch('/api/articles/9999')
+        .send(updateVotes)
+        .expect(404)
+        .then(({ body }) => {
+            expect(body.msg).toBe('Not found')
+        })
+    })
+    it('PATCH:400 returns an error when an invalid inc_votes is entered', () => {
+        const updateVotes = { inc_votes: 'not-a-num'};
+        return request(app)
+        .patch('/api/articles/1')
+        .send(updateVotes)
+        .expect(400)
+        .then(({ body }) => {
+            expect(body.msg).toBe('Invalid inc_votes')
+        })
+    })
+    it('PATCH:400 returns an error when an empty inc_votes is entered', () => {
+        const updateVotes = {};
+        return request(app)
+        .patch('/api/articles/1')
+        .send(updateVotes)
+        .expect(400)
+        .then(({ body }) => {
+            expect(body.msg).toBe('Invalid inc_votes')
+        })
+    })
+})
