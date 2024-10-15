@@ -1,4 +1,4 @@
-const { selectAllTopics, fetchArticleById, fetchArticles, fetchCommentsById } = require('../models/models')
+const { selectAllTopics, fetchArticleById, fetchArticles, fetchCommentsById, insertComment } = require('../models/models')
 const endpoints = require('../endpoints.json')
 
 exports.getTopics = (req, res, next) => {
@@ -42,6 +42,9 @@ exports.getArticles = (req, res, next) => {
 exports.getCommentsById = (req, res, next) => {
     const { article_id } = req.params;
     
+    if (isNaN(Number(article_id))) {
+        return res.status(400).send({ msg: 'Invalid Id'})
+    }
     const promises = [fetchArticleById(article_id), fetchCommentsById(article_id)]
     return Promise.all(promises)
     .then(([article, comments]) => {
@@ -50,3 +53,30 @@ exports.getCommentsById = (req, res, next) => {
         next(err);
     })
 }
+
+exports.postComment = (req, res, next) => {
+    const { article_id } = req.params;
+    const { username, body } = req.body;
+
+    if (isNaN(Number(article_id))) {
+        return res.status(400).send({ msg: 'Invalid Id'})
+    }
+
+    if (!username || !body) {
+        return res.status(400).send({ msg: 'Missing username or body'})
+    }
+
+    const promises = [fetchArticleById(article_id), insertComment(article_id, username, body)]
+
+    return Promise.all(promises)
+        .then(([article, comment]) => {
+            res.status(201).send({ comment });
+        }).catch((err) => {
+            if (err.code === '23503') {
+                return res.status(404).send({ msg: 'Invalid username'})
+            }
+            next(err);
+        })
+}
+
+
