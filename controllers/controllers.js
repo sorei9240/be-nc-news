@@ -1,4 +1,4 @@
-const { selectAllTopics, fetchArticleById, fetchArticles, fetchCommentsById, insertComment, updateArticleVotes } = require('../models/models')
+const { selectAllTopics, fetchArticleById, fetchArticles, fetchCommentsById, insertComment, updateArticleVotes, removeComment } = require('../models/models')
 const endpoints = require('../endpoints.json')
 
 exports.getTopics = (req, res, next) => {
@@ -42,14 +42,14 @@ exports.getArticles = (req, res, next) => {
 exports.getCommentsById = (req, res, next) => {
     const { article_id } = req.params;
     
-    if (isNaN(Number(article_id))) {
-        return res.status(400).send({ msg: 'Invalid Id'})
-    }
     const promises = [fetchArticleById(article_id), fetchCommentsById(article_id)]
     return Promise.all(promises)
     .then(([article, comments]) => {
         res.status(200).send({ comments })
     }).catch((err) => {
+        if (err.code === '22P02') {
+            return res.status(400).send({ msg: 'Invalid Id'})
+        }
         next(err);
     })
 }
@@ -57,10 +57,6 @@ exports.getCommentsById = (req, res, next) => {
 exports.postComment = (req, res, next) => {
     const { article_id } = req.params;
     const { username, body } = req.body;
-
-    if (isNaN(Number(article_id))) {
-        return res.status(400).send({ msg: 'Invalid Id'})
-    }
 
     if (!username || !body) {
         return res.status(400).send({ msg: 'Missing username or body'})
@@ -75,6 +71,9 @@ exports.postComment = (req, res, next) => {
             if (err.code === '23503') {
                 return res.status(404).send({ msg: 'Invalid username'})
             }
+            if (err.code === '22P02') {
+                return res.status(400).send({ msg: 'Invalid Id'})
+            }
             next(err);
         })
 }
@@ -82,10 +81,6 @@ exports.postComment = (req, res, next) => {
 exports.patchArticleVotes = (req, res, next) => {
     const { article_id } = req.params;
     const { inc_votes } = req.body;
-
-    if(isNaN(Number(article_id))) {
-        return res.status(400).send({ msg: 'Invalid Id' });
-    }
 
     if (typeof inc_votes !== 'number' || !inc_votes) {
         return res.status(400).send({ msg: 'Invalid inc_votes' });
@@ -95,7 +90,27 @@ exports.patchArticleVotes = (req, res, next) => {
     .then((article) => {
         res.status(200).send({ article });
     })
-    .catch(next);
+    .catch((err) => {
+        if (err.code === '22P02') {
+            return res.status(400).send({ msg: 'Invalid Id'})
+        }
+        next(err);
+    });
+}
+
+exports.deleteComment = (req, res, next) => {
+    const { comment_id } = req.params;
+
+    removeComment(comment_id)
+    .then(() => {
+        res.status(204).send();
+    })
+    .catch((err) => {
+        if (err.code === '22P02') {
+            return res.status(400).send({ msg: 'Invalid Id'})
+        }
+        next(err);
+    });
 }
 
 

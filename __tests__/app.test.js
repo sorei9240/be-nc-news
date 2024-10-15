@@ -270,3 +270,27 @@ describe('PATCH /api/articles/:article_id', () => {
         })
     })
 })
+
+describe('DELETE /api/comments/:comment_id', () => {
+    it('DELETE:204 successfully deletes comment and returns 204', () => {
+        return request(app)
+        .delete('/api/comments/1')
+        .expect(204)
+    })
+    it('DELETE:400 throws an error when an invalid id is entered', () => {
+        return request(app)
+        .delete('/api/comments/abc')
+        .expect(400)
+        .then(({ body }) => {
+            expect(body.msg).toBe('Invalid Id')
+        })
+    })
+    it('DELETE:404 throws an error when a valid but nonexistent id is entered', () => {
+        return request(app)
+        .delete('/api/comments/9999')
+        .expect(404)
+        .then(({ body }) => {
+            expect(body.msg).toBe('Not found')
+        })
+    })
+})
