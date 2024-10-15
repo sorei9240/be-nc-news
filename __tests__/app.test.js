@@ -294,3 +294,22 @@ describe('DELETE /api/comments/:comment_id', () => {
         })
     })
 })
+
+describe('GET /api/users', () => {
+    it('returns an array of users with the expected properties', () => {
+        return request(app)
+        .get('/api/users')
+        .expect(200)
+        .then(({ body }) => {
+            expect(Array.isArray(body.users)).toBe(true)
+            expect(body.users).toHaveLength(4)
+            body.users.forEach((user) => {
+                expect(user).toEqual(expect.objectContaining({
+                    username: expect.any(String),
+                    name: expect.any(String),
+                    avatar_url: expect.any(String)
+                }))
+            })
+        })
+    })
+})
