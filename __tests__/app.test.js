@@ -94,3 +94,33 @@ describe('GET /api/articles', () => {
             })
     })
 })
+
+describe('GET /api/articles/:article_id/comments', () => {
+    it('GET:200 responds with comments on the article matching the given id, sorted by date in descending order', () => {
+        return request(app)
+            .get('/api/articles/9/comments')
+            .expect(200)
+            .then(({ body }) => {
+                expect(body.comments).toHaveLength(2);
+                expect(body.comments).toBeSortedBy('created_at', { descending: true});
+                body.comments.forEach((comment) => {
+                    expect(comment).toEqual(expect.objectContaining({
+                        comment_id: expect.any(Number),
+                        votes: expect.any(Number),
+                        created_at: expect.any(String),
+                        author: expect.any(String),
+                        body: expect.any(String),
+                        article_id: expect.any(Number)
+                    }))
+                })
+            })
+    })
+    it('GET:200 returns an empty array when passed a valid article_id with no associated comments', () => {
+        return request(app)
+            .get('/api/articles/2/comments')
+            .expect(200)
+            .then(({ body }) => {
+                expect(body.comments).toHaveLength(0);
+            })
+    })
+})
