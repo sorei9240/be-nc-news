@@ -1,4 +1,4 @@
-const { selectAllTopics, fetchArticleById, fetchArticles, fetchCommentsById, insertComment } = require('../models/models')
+const { selectAllTopics, fetchArticleById, fetchArticles, fetchCommentsById, insertComment, updateArticleVotes } = require('../models/models')
 const endpoints = require('../endpoints.json')
 
 exports.getTopics = (req, res, next) => {
@@ -77,6 +77,25 @@ exports.postComment = (req, res, next) => {
             }
             next(err);
         })
+}
+
+exports.patchArticleVotes = (req, res, next) => {
+    const { article_id } = req.params;
+    const { inc_votes } = req.body;
+
+    if(isNaN(Number(article_id))) {
+        return res.status(400).send({ msg: 'Invalid Id' });
+    }
+
+    if (typeof inc_votes !== 'number' || !inc_votes) {
+        return res.status(400).send({ msg: 'Invalid inc_votes' });
+    }
+
+    updateArticleVotes(article_id, inc_votes)
+    .then((article) => {
+        res.status(200).send({ article });
+    })
+    .catch(next);
 }
 
 
