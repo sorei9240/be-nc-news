@@ -17,8 +17,8 @@ To run tests run the command `npm test` in the terminal.
 
 ## Version Requirements
 
-The minimum node version required to run this project is 14.18.0
-The minimum PostgreSQL version required to run this project is 12
+- The minimum node version required to run this project is 14.18.0
+- The minimum PostgreSQL version required to run this project is 12
 
 --- 
 
