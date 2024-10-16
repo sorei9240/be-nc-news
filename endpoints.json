@@ -42,7 +42,8 @@
           "comment_count"
         ]
       },
-      { "order": ["ASC", "DESC"] }
+      { "order": ["ASC", "DESC"] },
+      "topic"
     ],
     "exampleResponse": {
       "article": {

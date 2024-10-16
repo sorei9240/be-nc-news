@@ -24,6 +24,9 @@ app.patch('/api/articles/:article_id', patchArticleVotes)
 app.delete('/api/comments/:comment_id', deleteComment)
 
 app.use((err, req, res, next) => {
+    if (err.code === '22P02') {
+        return res.status(400).send({ msg: 'Invalid Request' });
+    }
     if (err.status) {
         return res.status(err.status).send({ msg: err.msg })
     }

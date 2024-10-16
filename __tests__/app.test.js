@@ -66,7 +66,7 @@ describe('GET /api/articles/:article_id', () => {
             .get('/api/articles/not-an-id')
             .expect(400)
             .then(({ body }) => {
-                expect(body.msg).toBe('Invalid Id')
+                expect(body.msg).toBe('Invalid Request')
             })
     })
 })
@@ -98,10 +98,35 @@ describe('GET /api/articles', () => {
             .get('/api/articles?sort_by=comment_count&order=asc')
             .expect(200)
             .then(({ body }) => {
-                console.log(body)
                 expect(body.articles.length).toBe(13);
                 expect(body.articles).toBeSortedBy('comment_count', { descending: false });
             })
+    })
+    it('returns an error if an invalid sort_by is entered', () => {
+        return request(app)
+        .get('/api/articles?sort_by=invalid')
+        .expect(400)
+    })
+    it('returns an error if an invalid order is entered', () => {
+        return request(app)
+        .get('/api/articles?order=abc')
+        .expect(400)
+    })
+    it('returns an array of all articles of the requested topic', () => {
+        return request(app)
+            .get('/api/articles?topic=cats')
+            .expect(200)
+            .then(({ body }) => {
+                expect(body.articles).toHaveLength(1)
+            })
+    })
+    it('returns 404 if a topic with no matching articles is entered', () => {
+        return request(app)
+        .get('/api/articles?topic=potatoes')
+        .expect(404)
+        .then(({ body }) => {
+            expect(body.msg).toBe('No articles found')
+        })
     })
 
 })
@@ -147,7 +172,7 @@ describe('GET /api/articles/:article_id/comments', () => {
             .get('/api/articles/abc/comments')
             .expect(400)
             .then(({ body }) => {
-                expect(body.msg).toBe('Invalid Id')
+                expect(body.msg).toBe('Invalid Request')
             })
     })
 })
@@ -180,7 +205,7 @@ describe('POST /api/articles/:article_id/comments', () => {
         .send(testComment)
         .expect(400)
         .then(({ body }) => {
-            expect(body.msg).toBe('Invalid Id')
+            expect(body.msg).toBe('Invalid Request')
         })
     })
     it('POST:400 returns an error when the request is missing the body', () => {
@@ -247,7 +272,7 @@ describe('PATCH /api/articles/:article_id', () => {
         .send(updateVotes)
         .expect(400)
         .then(({ body }) => {
-            expect(body.msg).toBe('Invalid Id')
+            expect(body.msg).toBe('Invalid Request')
         })
     })
     it('PATCH:404 returns an error when an attempt is made to patch a valid but nonexistent id', () => {
@@ -293,7 +318,7 @@ describe('DELETE /api/comments/:comment_id', () => {
         .delete('/api/comments/abc')
         .expect(400)
         .then(({ body }) => {
-            expect(body.msg).toBe('Invalid Id')
+            expect(body.msg).toBe('Invalid Request')
         })
     })
     it('DELETE:404 throws an error when a valid but nonexistent id is entered', () => {

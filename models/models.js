@@ -17,7 +17,7 @@ exports.fetchArticleById = (id) => {
     })
 }
 
-exports.fetchArticles = (sort_by = 'created_at', order = 'DESC') => {
+exports.fetchArticles = (sort_by = 'created_at', order = 'DESC', topic) => {
     const validSortBy = ['article_id', 'title', 'topic', 'author', 'body', 'created_at', 'votes', 'article_img_url', 'comment_count']
 
     if (!validSortBy.includes(sort_by.toLowerCase())) {
@@ -32,13 +32,27 @@ exports.fetchArticles = (sort_by = 'created_at', order = 'DESC') => {
             SELECT article_id, title, topic, author, created_at, votes, article_img_url,
             CAST((SELECT COUNT(*) FROM comments WHERE comments.article_id = articles.article_id) AS INT) AS comment_count
             FROM articles
-        ) AS articles_with_count ORDER BY ${sort_by} ${order};`
+        ) AS articles_with_count`
 
-    return db.query(queryStr)
-    .then((result) => {
-        return result.rows;
+    const queryVals = [];
+
+    if (topic) {
+        queryStr += ` WHERE topic = $1`
+        queryVals.push(topic);
+    }
+
+    queryStr += ` ORDER BY ${sort_by} ${order};`;
+
+    return db.query(queryStr, queryVals)
+    .then(({ rows }) => { 
+        if (rows.length === 0) {
+            return Promise.reject({ status: 404, msg: 'No articles found' });
+        }
+        return rows;
     })
 }
+
+
 
 exports.fetchCommentsById = (id) => {
     return db.query('SELECT * FROM comments WHERE article_id = $1 ORDER BY created_at DESC;', [id])
