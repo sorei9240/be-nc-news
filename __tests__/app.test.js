@@ -47,6 +47,7 @@ describe('GET /api/articles/:article_id', () => {
                     topic: 'mitch',
                     author: 'butter_bridge',
                     body: 'I find this existence challenging',
+                    comment_count: 11,
                     created_at: '2020-07-09T20:11:00.000Z',
                     votes: 100,
                     article_img_url: 'https://images.pexels.com/photos/158651/news-newsletter-newspaper-information-158651.jpeg?w=700&h=700'
@@ -68,6 +69,14 @@ describe('GET /api/articles/:article_id', () => {
             .then(({ body }) => {
                 expect(body.msg).toBe('Invalid Request')
             })
+    })
+    it('returns a comment_count of 0 when an article has no comments', () => {
+        return request(app)
+        .get('/api/articles/2')
+        .expect(200)
+        .then(({ body }) => {
+            expect(body.article.comment_count).toBe(0)
+        })
     })
 })
 

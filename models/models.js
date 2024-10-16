@@ -8,7 +8,10 @@ exports.selectAllTopics = () => {
 }
 
 exports.fetchArticleById = (id) => {
-    return db.query('SELECT * FROM articles WHERE article_id = $1;', [id])
+    return db.query(`
+        SELECT *,
+        CAST((SELECT COUNT(*) FROM comments WHERE comments.article_id = articles.article_id) AS INT) AS comment_count
+        FROM articles WHERE article_id = $1;`, [id])
     .then(({ rows }) => {
         if (rows.length === 0) {
             return Promise.reject({status: 404, msg: "Not found"})
