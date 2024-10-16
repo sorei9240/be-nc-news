@@ -93,6 +93,17 @@ describe('GET /api/articles', () => {
                 })
             })
     })
+    it('returns an array of all articles sorted by the requested property and in the requested order', () => {
+        return request(app)
+            .get('/api/articles?sort_by=comment_count&order=asc')
+            .expect(200)
+            .then(({ body }) => {
+                console.log(body)
+                expect(body.articles.length).toBe(13);
+                expect(body.articles).toBeSortedBy('comment_count', { descending: false });
+            })
+    })
+
 })
 
 describe('GET /api/articles/:article_id/comments', () => {

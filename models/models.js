@@ -17,10 +17,24 @@ exports.fetchArticleById = (id) => {
     })
 }
 
-exports.fetchArticles = () => {
-    return db.query(`SELECT article_id, title, topic, author, created_at, votes, article_img_url,
-        CAST((SELECT COUNT(*) FROM comments WHERE comments.article_id = articles.article_id) AS INT) AS comment_count
-        FROM articles ORDER BY created_at DESC;`)
+exports.fetchArticles = (sort_by = 'created_at', order = 'DESC') => {
+    const validSortBy = ['article_id', 'title', 'topic', 'author', 'body', 'created_at', 'votes', 'article_img_url', 'comment_count']
+
+    if (!validSortBy.includes(sort_by.toLowerCase())) {
+        return Promise.reject({ status: 400, msg: 'Bad request'})
+    }
+
+    if (order.toUpperCase() !== 'DESC' && order.toUpperCase() !== 'ASC') {
+        return Promise.reject({ status: 400, msg: 'Bad request'})
+    }
+
+    let queryStr = `SELECT * FROM (
+            SELECT article_id, title, topic, author, created_at, votes, article_img_url,
+            CAST((SELECT COUNT(*) FROM comments WHERE comments.article_id = articles.article_id) AS INT) AS comment_count
+            FROM articles
+        ) AS articles_with_count ORDER BY ${sort_by} ${order};`
+
+    return db.query(queryStr)
     .then((result) => {
         return result.rows;
     })
