@@ -16,13 +16,6 @@ exports.getEndpoints = (req, res) => {
 exports.getArticleById = (req, res, next) => {
     const { article_id } = req.params;
 
-    if (isNaN(Number(article_id))) {
-        return Promise.reject({ status: 400, msg: 'Invalid Id' })
-        .catch((err) => {
-            next(err);
-        });
-    }
-
     return fetchArticleById(article_id).then((article) => {
         res.status(200).send({article: article})
     }).catch((err) => {
@@ -31,8 +24,8 @@ exports.getArticleById = (req, res, next) => {
 }
 
 exports.getArticles = (req, res, next) => {
-    const { sort_by, order } = req.query;
-    return fetchArticles(sort_by, order)
+    const { sort_by, order, topic } = req.query;
+    return fetchArticles(sort_by, order, topic)
     .then((articles) => {
         res.status(200).send({ articles })
     }).catch((err) => {
@@ -48,9 +41,6 @@ exports.getCommentsById = (req, res, next) => {
     .then(([article, comments]) => {
         res.status(200).send({ comments })
     }).catch((err) => {
-        if (err.code === '22P02') {
-            return res.status(400).send({ msg: 'Invalid Id'})
-        }
         next(err);
     })
 }
@@ -72,9 +62,6 @@ exports.postComment = (req, res, next) => {
             if (err.code === '23503') {
                 return res.status(404).send({ msg: 'Invalid username'})
             }
-            if (err.code === '22P02') {
-                return res.status(400).send({ msg: 'Invalid Id'})
-            }
             next(err);
         })
 }
@@ -92,9 +79,6 @@ exports.patchArticleVotes = (req, res, next) => {
         res.status(200).send({ article });
     })
     .catch((err) => {
-        if (err.code === '22P02') {
-            return res.status(400).send({ msg: 'Invalid Id'})
-        }
         next(err);
     });
 }
@@ -107,9 +91,6 @@ exports.deleteComment = (req, res, next) => {
         res.status(204).send();
     })
     .catch((err) => {
-        if (err.code === '22P02') {
-            return res.status(400).send({ msg: 'Invalid Id'})
-        }
         next(err);
     });
 }
