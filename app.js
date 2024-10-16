@@ -25,7 +25,7 @@ app.delete('/api/comments/:comment_id', deleteComment)
 
 app.use((err, req, res, next) => {
     if (err.status) {
-        res.status(err.status).send({ msg: err.msg })
+        return res.status(err.status).send({ msg: err.msg })
     }
     next(err);
 })
