@@ -1,5 +1,10 @@
 # Northcoders News API
 
+## Link to Hosted Version
+
+https://sorei9240-nc-news.onrender.com/api
+
+
 ## Setup Instructions
 
 To setup this project yourself:
@@ -11,9 +16,11 @@ To setup this project yourself:
 4. **Setup and seed the database**: 
     - run `npm run setup-dbs` and `npm run seed` in the terminal
 
+
 ## Testing
 
 To run tests run the command `npm test` in the terminal.
+
 
 ## Version Requirements
 
