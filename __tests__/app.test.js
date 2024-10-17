@@ -115,11 +115,17 @@ describe('GET /api/articles', () => {
         return request(app)
         .get('/api/articles?sort_by=invalid')
         .expect(400)
+        .then(({ body }) => {
+            expect(body.msg).toBe('Invalid sort_by')
+        })
     })
     it('returns an error if an invalid order is entered', () => {
         return request(app)
         .get('/api/articles?order=abc')
         .expect(400)
+        .then(({ body }) => {
+            expect(body.msg).toBe('Invalid order')
+        })
     })
     it('returns an array of all articles of the requested topic', () => {
         return request(app)
@@ -127,6 +133,9 @@ describe('GET /api/articles', () => {
             .expect(200)
             .then(({ body }) => {
                 expect(body.articles).toHaveLength(1)
+                body.articles.forEach((article) => {
+                    expect(article.topic).toBe('cats')
+                })
             })
     })
     it('returns 404 if a topic with no matching articles is entered', () => {

@@ -8,52 +8,53 @@ exports.selectAllTopics = () => {
 }
 
 exports.fetchArticleById = (id) => {
-    return db.query(`
-        SELECT *,
-        CAST((SELECT COUNT(*) FROM comments WHERE comments.article_id = articles.article_id) AS INT) AS comment_count
-        FROM articles WHERE article_id = $1;`, [id])
+    return db.query(`SELECT articles.*, CAST(COUNT(comments.comment_id) AS INT) AS comment_count FROM articles 
+        LEFT JOIN comments ON articles.article_id = comments.article_id WHERE articles.article_id = $1 
+        GROUP BY articles.article_id;`, [id])
     .then(({ rows }) => {
         if (rows.length === 0) {
-            return Promise.reject({status: 404, msg: "Not found"})
+            return Promise.reject({status: 404, msg: "Not found"});
         }
-        return rows[0]
+        return rows[0];
     })
 }
 
 exports.fetchArticles = (sort_by = 'created_at', order = 'DESC', topic) => {
-    const validSortBy = ['article_id', 'title', 'topic', 'author', 'body', 'created_at', 'votes', 'article_img_url', 'comment_count']
+    const validSortBy = ['article_id', 'title', 'topic', 'author', 'created_at', 'votes', 'article_img_url', 'comment_count'];
 
     if (!validSortBy.includes(sort_by.toLowerCase())) {
-        return Promise.reject({ status: 400, msg: 'Bad request'})
+        return Promise.reject({ status: 400, msg: 'Invalid sort_by' });
     }
 
     if (order.toUpperCase() !== 'DESC' && order.toUpperCase() !== 'ASC') {
-        return Promise.reject({ status: 400, msg: 'Bad request'})
+        return Promise.reject({ status: 400, msg: 'Invalid order' });
     }
 
-    let queryStr = `SELECT * FROM (
-            SELECT article_id, title, topic, author, created_at, votes, article_img_url,
-            CAST((SELECT COUNT(*) FROM comments WHERE comments.article_id = articles.article_id) AS INT) AS comment_count
-            FROM articles
-        ) AS articles_with_count`
-
+    let queryStr = `SELECT articles.article_id, articles.title, articles.topic, articles.author, 
+        articles.created_at, articles.votes, articles.article_img_url, CAST(COUNT(comments.comment_id) AS INT) AS comment_count
+        FROM articles LEFT JOIN comments ON articles.article_id = comments.article_id`;
+    
     const queryVals = [];
 
     if (topic) {
-        queryStr += ` WHERE topic = $1`
+        queryStr += ` WHERE articles.topic = $1`;
         queryVals.push(topic);
     }
 
-    queryStr += ` ORDER BY ${sort_by} ${order};`;
+    queryStr += `
+        GROUP BY articles.article_id
+        ORDER BY ${sort_by} ${order};
+    `;
 
     return db.query(queryStr, queryVals)
-    .then(({ rows }) => { 
-        if (rows.length === 0) {
-            return Promise.reject({ status: 404, msg: 'No articles found' });
-        }
-        return rows;
-    })
+        .then(({ rows }) => {
+            if (rows.length === 0) {
+                return Promise.reject({ status: 404, msg: 'No articles found' });
+            }
+            return rows;
+        });
 }
+
 
 
 
