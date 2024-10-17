@@ -367,3 +367,28 @@ describe('GET /api/users', () => {
         })
     })
 })
+
+describe('GET /api/users/:username', () => {
+    it('returns the requested user object with all associated properties', () => {
+        return request(app)
+        .get('/api/users/lurker')
+        .expect(200)
+        .then(({ body }) => {
+            console.log(body)
+            expect(typeof body.user).toBe('object')
+            expect(body.user).toEqual(expect.objectContaining({
+                username: 'lurker',
+                name: 'do_nothing',
+                avatar_url: 'https://www.golenbock.com/wp-content/uploads/2015/01/placeholder-user.png'
+            }))
+        })
+    })
+    it('returns a 404 error when the requested user does not exist', () => {
+        return request(app)
+        .get('/api/users/i_dont_exist')
+        .expect(404)
+        .then(({ body }) => {
+            expect(body.msg).toBe('User Not Found')
+        })
+    })
+})
