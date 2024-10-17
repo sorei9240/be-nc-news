@@ -1,4 +1,14 @@
-const { selectAllTopics, fetchArticleById, fetchArticles, fetchCommentsById, insertComment, updateArticleVotes, removeComment, fetchUsers, fetchUserByUsername, updateCommentVotes } = require('../models/models')
+const { selectAllTopics, 
+        fetchArticleById, 
+        fetchArticles, 
+        fetchCommentsById, 
+        insertComment, 
+        updateArticleVotes, 
+        removeComment, 
+        fetchUsers, 
+        fetchUserByUsername, 
+        updateCommentVotes, 
+        insertArticle } = require('../models/models')
 const endpoints = require('../endpoints.json')
 
 exports.getTopics = (req, res, next) => {
@@ -132,3 +142,19 @@ exports.patchCommentVotes = (req, res, next) => {
     });
 }
 
+exports.postArticle = (req, res, next) => {
+    const { author, title, body, topic, article_img_url } = req.body
+
+    insertArticle(author, title, body, topic, article_img_url)
+    .then((article) => {
+        res.status(201).send({ article: article })
+    }).catch((err) => {
+        if (err.code === '23502') {
+            return res.status(400).send({ msg: 'Missing or invalid fields'})
+        }
+        if (err.code === '23503') {
+            return res.status(404).send({ msg: 'Username or topic not found'})
+        }
+        next(err);
+    })
+}

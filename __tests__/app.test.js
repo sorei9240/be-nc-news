@@ -374,7 +374,6 @@ describe('GET /api/users/:username', () => {
         .get('/api/users/lurker')
         .expect(200)
         .then(({ body }) => {
-            console.log(body)
             expect(typeof body.user).toBe('object')
             expect(body.user).toEqual(expect.objectContaining({
                 username: 'lurker',
@@ -443,6 +442,95 @@ describe('PATCH /api/comments/:comment_id', () => {
         .expect(400)
         .then(({ body }) => {
             expect(body.msg).toBe('Invalid inc_votes')
+        })
+    })
+})
+
+describe('POST /api/articles', () => {
+    it('POST:201 returns the posted article', () => {
+        const testArticle = { 
+            title: "They're not exactly cats, are they?",
+            topic: "mitch",
+            author: "butter_bridge",
+            body: "Well? Think about it.",
+            article_img_url: "https://images.pexels.com/photos/158651/news-newsletter-newspaper-information-158651.jpeg?w=700&h=700",
+        };
+
+        return request(app)
+        .post('/api/articles')
+        .send(testArticle)
+        .expect(201)
+        .then(({ body }) => {
+            expect(body.article).toEqual(expect.objectContaining({
+                article_id: 14,
+                title: testArticle.title,
+                topic: testArticle.topic,
+                author: testArticle.author,
+                body: testArticle.body,
+                article_img_url: testArticle.article_img_url,
+                votes: 0,
+                created_at: expect.any(String),
+                comment_count: 0
+            }))
+        })
+    })
+    it('POST:201 successfully posts article when missing an image URL', () => {
+        const testArticle = { 
+            title: "They're not exactly cats, are they?",
+            topic: "mitch",
+            author: "butter_bridge",
+            body: "Well? Think about it.",
+        };
+
+        return request(app)
+        .post('/api/articles')
+        .send(testArticle)
+        .expect(201)
+        .then(({ body }) => {
+            console.log(body)
+            expect(body.article).toEqual(expect.objectContaining({
+                article_id: 14,
+                title: testArticle.title,
+                topic: testArticle.topic,
+                author: testArticle.author,
+                body: testArticle.body,
+                article_img_url: 'https://images.pexels.com/photos/97050/pexels-photo-97050.jpeg?w=700&h=700',
+                votes: 0,
+                created_at: expect.any(String),
+                comment_count: 0
+            }))
+        })
+    })
+    it('POST:400 returns an error when the request is missing required fields', () => {
+        const testArticle = { 
+            title: "They're not exactly cats, are they?",
+            topic: "mitch",
+            author: "butter_bridge",
+            article_img_url: "https://images.pexels.com/photos/158651/news-newsletter-newspaper-information-158651.jpeg?w=700&h=700",
+        };
+        return request(app)
+        .post('/api/articles')
+        .send(testArticle)
+        .expect(400)
+        .then(({ body }) => {
+            expect(body.msg).toBe('Missing or invalid fields')
+        })
+    })
+    it('Returns an error when an invalid username is entered', () => {
+        const testArticle = { 
+            title: "They're not exactly cats, are they?",
+            topic: "mitch",
+            author: "i_dont_exist",
+            body: "Well? Think about it.",
+            article_img_url: "https://images.pexels.com/photos/158651/news-newsletter-newspaper-information-158651.jpeg?w=700&h=700",
+        };
+
+        return request(app)
+        .post('/api/articles')
+        .send(testArticle)
+        .expect(404)
+        .then(({ body }) => {
+            expect(body.msg).toBe('Username or topic not found')
         })
     })
 })

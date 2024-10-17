@@ -55,9 +55,6 @@ exports.fetchArticles = (sort_by = 'created_at', order = 'DESC', topic) => {
         });
 }
 
-
-
-
 exports.fetchCommentsById = (id) => {
     return db.query('SELECT * FROM comments WHERE article_id = $1 ORDER BY created_at DESC;', [id])
     .then(({ rows }) => {
@@ -121,3 +118,24 @@ exports.updateCommentVotes = (comment_id, inc_votes) => {
         return rows[0];
     })
 }
+
+exports.insertArticle = (author, title, body, topic, article_img_url = null) => {
+    let queryStr = `INSERT INTO articles `;
+    let queryVals = [author, title, body, topic];
+
+    if (article_img_url) {
+        queryStr += `
+            (author, title, body, topic, article_img_url, votes, created_at) VALUES ($1, $2, $3, $4, $5, 0, NOW()) RETURNING *;`
+        queryVals.push(article_img_url);
+    } else {
+        queryStr += `(author, title, body, topic, votes, created_at) VALUES ($1, $2, $3, $4, 0, NOW()) RETURNING *;`
+    }
+
+    return db.query(queryStr, queryVals)
+    .then(({ rows }) => {
+        const article = rows[0];
+        article.comment_count = 0; 
+        return article;
+    });
+};
+
