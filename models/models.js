@@ -38,37 +38,35 @@ exports.fetchArticles = (sort_by = 'created_at', order = 'DESC', topic, limit = 
         countVals.push(topic);
     }
 
-    return db.query(countQuery, countVals)
-        .then(({ rows }) => {
-            const totalCount = Number(rows[0].count);
+    const queryVals = [];
+    let queryStr = `SELECT articles.article_id, articles.title, articles.topic, articles.author, articles.created_at, articles.votes, articles.article_img_url, 
+        CAST(COUNT(comments.comment_id) AS INT) AS comment_count FROM articles LEFT JOIN comments ON articles.article_id = comments.article_id`;
 
-            const queryVals = [];
-            let queryStr = `SELECT articles.article_id, articles.title, articles.topic, articles.author, articles.created_at, articles.votes, articles.article_img_url, 
-                CAST(COUNT(comments.comment_id) AS INT) AS comment_count FROM articles LEFT JOIN comments ON articles.article_id = comments.article_id`;
+    if (topic) {
+        queryStr += ` WHERE articles.topic = $1`;
+        queryVals.push(topic);
+    }
 
-            if (topic) {
-                queryStr += ` WHERE articles.topic = $1`;
-                queryVals.push(topic);
+    queryStr += ` GROUP BY articles.article_id ORDER BY ${sort_by} ${order}`;
+
+    queryVals.push(Number(limit));
+    queryStr += ` LIMIT $${queryVals.length}`;
+
+    queryVals.push((Number(p) - 1) * Number(limit));
+    queryStr += ` OFFSET $${queryVals.length};`;
+
+    return Promise.all([db.query(countQuery, countVals),db.query(queryStr, queryVals)])
+        .then(([countResult, articlesResult]) => {
+            const totalCount = +countResult.rows[0].count;
+            const articles = articlesResult.rows;
+
+            if (articles.length === 0) {
+                return Promise.reject({ status: 404, msg: 'No articles found' });
             }
-
-            queryStr += ` GROUP BY articles.article_id ORDER BY ${sort_by} ${order}`;
-
-            queryVals.push(Number(limit));
-            queryStr += ` LIMIT $${queryVals.length}`;
-
-            queryVals.push((Number(p) - 1) * Number(limit));
-            queryStr += ` OFFSET $${queryVals.length};`;
-
-            return db.query(queryStr, queryVals)
-                .then(({ rows: articles }) => {
-                    if (articles.length === 0) {
-                        return Promise.reject({ status: 404, msg: 'No articles found' });
-                    }
-
-                    return { articles, totalCount };
-                });
+            return { articles, totalCount };
         });
 };
+
 
 
 exports.fetchCommentsById = (id) => {
