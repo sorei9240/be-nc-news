@@ -86,7 +86,7 @@ describe('GET /api/articles', () => {
             .get('/api/articles')
             .expect(200)
             .then(({ body }) => {
-                expect(body.articles.length).toBe(13);
+                expect(body.totalCount).toBe(13);
                 expect(body.articles).toBeSortedBy('created_at', { descending: true });
                 body.articles.forEach((article) => {
                     expect(article).toEqual(expect.objectContaining({
@@ -102,13 +102,31 @@ describe('GET /api/articles', () => {
                 })
             })
     })
-    it('returns an array of all articles sorted by the requested property and in the requested order', () => {
+    it('returns an array of all articles with the requested limit, sorted by the requested property and in the requested order', () => {
         return request(app)
-            .get('/api/articles?sort_by=comment_count&order=asc')
+            .get('/api/articles?sort_by=comment_count&order=asc&limit=13')
             .expect(200)
             .then(({ body }) => {
                 expect(body.articles.length).toBe(13);
                 expect(body.articles).toBeSortedBy('comment_count', { descending: false });
+            })
+    })
+    it('returns the second page of results when a limit and page are entered', () => {
+        return request(app)
+            .get('/api/articles?limit=1&p=2')
+            .expect(200)
+            .then(({ body }) => {
+                expect(body.articles.length).toBe(1)
+                expect(body.articles[0]).toEqual(expect.objectContaining({
+                    article_id: 6,
+                    title: 'A',
+                    topic: 'mitch',
+                    author: 'icellusedkars',
+                    created_at: expect.any(String),
+                    votes: 0,
+                    article_img_url: 'https://images.pexels.com/photos/158651/news-newsletter-newspaper-information-158651.jpeg?w=700&h=700',
+                    comment_count: 1
+                }))
             })
     })
     it('returns an error if an invalid sort_by is entered', () => {
@@ -487,7 +505,6 @@ describe('POST /api/articles', () => {
         .send(testArticle)
         .expect(201)
         .then(({ body }) => {
-            console.log(body)
             expect(body.article).toEqual(expect.objectContaining({
                 article_id: 14,
                 title: testArticle.title,

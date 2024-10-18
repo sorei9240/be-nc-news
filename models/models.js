@@ -19,7 +19,7 @@ exports.fetchArticleById = (id) => {
     })
 }
 
-exports.fetchArticles = (sort_by = 'created_at', order = 'DESC', topic) => {
+exports.fetchArticles = (sort_by = 'created_at', order = 'DESC', topic, limit = 10, p = 1) => {
     const validSortBy = ['article_id', 'title', 'topic', 'author', 'created_at', 'votes', 'article_img_url', 'comment_count'];
 
     if (!validSortBy.includes(sort_by.toLowerCase())) {
@@ -30,30 +30,46 @@ exports.fetchArticles = (sort_by = 'created_at', order = 'DESC', topic) => {
         return Promise.reject({ status: 400, msg: 'Invalid order' });
     }
 
-    let queryStr = `SELECT articles.article_id, articles.title, articles.topic, articles.author, 
-        articles.created_at, articles.votes, articles.article_img_url, CAST(COUNT(comments.comment_id) AS INT) AS comment_count
-        FROM articles LEFT JOIN comments ON articles.article_id = comments.article_id`;
-    
-    const queryVals = [];
+    const countVals = [];
+    let countQuery = `SELECT COUNT(*) FROM articles`;
 
     if (topic) {
-        queryStr += ` WHERE articles.topic = $1`;
-        queryVals.push(topic);
+        countQuery += ` WHERE articles.topic = $1`;
+        countVals.push(topic);
     }
 
-    queryStr += `
-        GROUP BY articles.article_id
-        ORDER BY ${sort_by} ${order};
-    `;
-
-    return db.query(queryStr, queryVals)
+    return db.query(countQuery, countVals)
         .then(({ rows }) => {
-            if (rows.length === 0) {
-                return Promise.reject({ status: 404, msg: 'No articles found' });
+            const totalCount = Number(rows[0].count);
+
+            const queryVals = [];
+            let queryStr = `SELECT articles.article_id, articles.title, articles.topic, articles.author, articles.created_at, articles.votes, articles.article_img_url, 
+                CAST(COUNT(comments.comment_id) AS INT) AS comment_count FROM articles LEFT JOIN comments ON articles.article_id = comments.article_id`;
+
+            if (topic) {
+                queryStr += ` WHERE articles.topic = $1`;
+                queryVals.push(topic);
             }
-            return rows;
+
+            queryStr += ` GROUP BY articles.article_id ORDER BY ${sort_by} ${order}`;
+
+            queryVals.push(Number(limit));
+            queryStr += ` LIMIT $${queryVals.length}`;
+
+            queryVals.push((Number(p) - 1) * Number(limit));
+            queryStr += ` OFFSET $${queryVals.length};`;
+
+            return db.query(queryStr, queryVals)
+                .then(({ rows: articles }) => {
+                    if (articles.length === 0) {
+                        return Promise.reject({ status: 404, msg: 'No articles found' });
+                    }
+
+                    return { articles, totalCount };
+                });
         });
-}
+};
+
 
 exports.fetchCommentsById = (id) => {
     return db.query('SELECT * FROM comments WHERE article_id = $1 ORDER BY created_at DESC;', [id])
