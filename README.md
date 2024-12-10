@@ -27,6 +27,9 @@ To run tests run the command `npm test` in the terminal.
 - The minimum node version required to run this project is 14.18.0
 - The minimum PostgreSQL version required to run this project is 12
 
+## Link to Frontend
+You can find the React frontend repo [here](https://github.com/sorei9240/nc-news)
+
 --- 
 
 This portfolio project was created as part of a Digital Skills Bootcamp in Software Engineering provided by [Northcoders](https://northcoders.com/)
